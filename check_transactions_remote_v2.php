@@ -1,4 +1,5 @@
 <?php
+//tx spider, crawl the latest transactions and save to db.
 include "config.php";
 
 while(1){

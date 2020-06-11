@@ -1,4 +1,5 @@
 <?php
+//update account balances in realtime
 include "config.php";
 
 $GLOBALS['txs']=" ";
