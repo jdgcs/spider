@@ -4,11 +4,9 @@ include "config.php";
 $GLOBALS['txs']=" ";
 $GLOBALS['lastheight']=GetTopHeight();
 
-
-
 while(1){
 RealtimeSpider();
-sleep(1);
+usleep(1000);
 }
 
 function RealtimeSpider(){			
@@ -92,17 +90,13 @@ function ProcessTransactions($hash){
                      
                         
                         $isinsert=true;
-                        if($type=="SpendTx"){
-							//if(notscam($info->transactions[$m]->tx->sender_id)){
-								$sender_id=$info->transactions[$m]->tx->sender_id;
-								$recipient_id=$info->transactions[$m]->tx->recipient_id;
-								$amount=$info->transactions[$m]->tx->amount;
-								
-								$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,amount,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$amount,$block_height,$utc,'$block_hash',$fee)";
-								checkAccountDB($sender_id);checkAccountDB($recipient_id);
-							//}else{
-							//	  $isinsert=false;;
-							//	}
+                        if($type=="SpendTx"){							
+							$sender_id=$info->transactions[$m]->tx->sender_id;
+							$recipient_id=$info->transactions[$m]->tx->recipient_id;
+							$amount=$info->transactions[$m]->tx->amount;
+							
+							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,amount,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$amount,$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($sender_id);checkAccountDB($recipient_id);						
 							}
                         
                          if($type=="OracleRegisterTx" || $type=="NameRevokeTx" ||$type=="NamePreclaimTx"||$type=="NameUpdateTx"){
@@ -352,7 +346,7 @@ function decode_token_transfer($call_data,$decimal){//获取正确的返回调�
 	$tokenaddress="./contracts/aex9.aes";
 	
 	$cmd="$erlpath $clipath $tokenaddress -b fate --call_result $call_data --call_result_fun meta_info";
-	
+	//./bin/sophia/erts/bin/escript ./bin/sophia/aesophia_cli ./contracts/decode/aex9-interface.aes -b fate --call_result cb_KxGEoV2hK58AoMLlAP6SFrYeiuRrxi5A5rNjruumGuhbIsuZStUbvgZYb4kJG3fl5dmf/8CBWMg+ --call_result_fun transfer
 	//echo "$cmd\n";
 	exec($cmd,$ret);
 	$addresstmp="";
