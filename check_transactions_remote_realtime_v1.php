@@ -108,6 +108,7 @@ function ProcessTransactions($hash){
                          if($type=="OracleRegisterTx" || $type=="NameRevokeTx" ||$type=="NamePreclaimTx"||$type=="NameUpdateTx"){
 							$sender_id=$info->transactions[$m]->tx->account_id;
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id',$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($sender_id);
 							}
                         
                          if($type=="NameTransferTx"){
@@ -120,12 +121,14 @@ function ProcessTransactions($hash){
 							$sender_id=$info->transactions[$m]->tx->account_id;
 							$recipient_id=strtolower($info->transactions[$m]->tx->name);
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($sender_id);
 							}
                         
                         if($type=="OracleQueryTx"){
 							$sender_id=$info->transactions[$m]->tx->sender_id;
 							$recipient_id=str_replace("ok_","ak_",$info->transactions[$m]->tx->oracle_id);
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($sender_id);
 							}
 							
                         if($type=="OracleResponseTx" ||$type=="OracleExtendTx" ){
@@ -136,6 +139,7 @@ function ProcessTransactions($hash){
                         if($type=="ContractCreateTx"){
 							$sender_id=$info->transactions[$m]->tx->owner_id;
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id',$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($sender_id);
 							}
                         
                         if($type=="ContractCallTx"){
@@ -146,12 +150,14 @@ function ProcessTransactions($hash){
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
 							//CheckContracts($caller_id,$contract_id,$call_data,$block_height)
 							CheckContracts($sender_id,$recipient_id,$call_data,$block_height);
+							checkAccountDB($sender_id);
 							}
                         
                         if($type=="ChannelCreateTx"){
 							$sender_id=$info->transactions[$m]->tx->initiator_id;
 							$recipient_id=$info->transactions[$m]->tx->responder_id;
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($sender_id);checkAccountDB($recipient_id);
 							}
                         
                         if($type=="ChannelDepositTx" || $type=="ChannelForceProgressTx"|| $type=="ChannelCloseSoloTx" || $type=="ChannelCloseMutualTx" || $type=="ChannelSettleTx" ){
@@ -162,19 +168,10 @@ function ProcessTransactions($hash){
                         if($type=="ChannelWithdrawTx"){
 							$recipient_id=$info->transactions[$m]->tx->to_id;
 							$sql_insert="INSERT INTO tx(txtype,txhash,recipient_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
+							checkAccountDB($recipient_id);
 							}
                         
-                        
-                        
-                        //echo "$sql_insert\n";sleep(2);
-                        
-                        if($isinsert){
-							//$result_insert = pg_query($db1, $sql_insert);
-						  //  echo "$sql_insert\n";sleep(20);
-							//echo "$type $txhash inerted.\n";
-                        }else{
-							//echo "$type $txhash scam.\n";
-							}
+                   
 							
 							
                         }//else{echo "$type $txhash in DB.\n";}

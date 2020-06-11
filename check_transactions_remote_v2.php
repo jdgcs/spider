@@ -11,7 +11,6 @@ function FullTxsSpider(){
 	for($i=GetTopHeight()-10;$i<GetTopHeight();$i++){
 		$height=$i;
 		$url=DATA_SRC_SITE."v2/key-blocks/height/$height";
-		//$url="http://35.178.61.73:3013/v2/key-blocks/height/$height";
 		$websrc=getwebsrc($url);
 		$info=json_decode($websrc);		
 		$prev_hash=$info->prev_hash;
@@ -22,8 +21,7 @@ function FullTxsSpider(){
 	}	
 }
 
-function ProcessMicroBlock($microhash){
-	
+function ProcessMicroBlock($microhash){	
 	ProcessTransactions($microhash);
 	$url=DATA_SRC_SITE."v2/micro-blocks/hash/$microhash/header";
 	$websrc=getwebsrc($url);		
