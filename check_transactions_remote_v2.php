@@ -231,13 +231,13 @@ function CheckContracts($caller_id,$contract_id,$call_data,$block_height,$txhash
 				//print_r($data);sleep(1);
 					if($data['amount']>0){
 						ImportDB($caller_id,$contract_id,$alias,$decimal);
-						ImportDB_update($data['address'],$contract_id,$alias,$decimal,$txhash);						
+						ImportDB_update($data['address'],$contract_id,$alias,$decimal,$txhash,$data['amount']);						
 					}
 				}
 			}
 	}
 
-function ImportDB_update($account,$contract,$alias,$decimal,$txhash){
+function ImportDB_update($account,$contract,$alias,$decimal,$txhash,$amount){
 	$sql="SELECT balance from token WHERE account='$account' AND contract='$contract'";
 	$conn_string = "host=aeknow.db port=5432 dbname=postgres password=".DB_PASS." user=".DB_USER;
 	$db1 = pg_connect($conn_string);
@@ -271,7 +271,7 @@ function ImportDB_update($account,$contract,$alias,$decimal,$txhash){
 					}
 			
 			//update recipient_id
-			$sql_update="UPDATE tx SET recipient_id='$account' WHERE txhash='$txhash'";
+			$sql_update="UPDATE tx SET recipient_id='$account',amount=$amount WHERE txhash='$txhash'";
 			$result_update = pg_query($db1, $sql_update);
 			
 			if(!$result_update){
