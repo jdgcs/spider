@@ -117,9 +117,10 @@ function ProcessTransactions($hash){
 							$recipient_id=$info->transactions[$m]->tx->contract_id;
 							$call_data=$info->transactions[$m]->tx->call_data;
 							
-							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
+							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,contract_id,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$block_height,$utc,'$block_hash',$fee)";
+							
 							//CheckContracts($caller_id,$contract_id,$call_data,$block_height)
-							CheckContracts($sender_id,$recipient_id,$call_data,$block_height);
+							
 							}
                         
                         if($type=="ChannelCreateTx"){
@@ -146,6 +147,11 @@ function ProcessTransactions($hash){
 							$result_insert = pg_query($db1, $sql_insert);
 						  //  echo "$sql_insert\n";sleep(20);
 							echo "$type $txhash inerted.\n";
+							
+							if($type=="ContractCallTx"){
+								CheckContracts($sender_id,$recipient_id,$call_data,$block_height,$txhash);
+								}
+								
                         }else{
 							echo "$type $txhash scam.\n";
 							}
@@ -194,7 +200,7 @@ function checkAccountDB($address){
 }
 
 
-function CheckContracts($caller_id,$contract_id,$call_data,$block_height){
+function CheckContracts($caller_id,$contract_id,$call_data,$block_height,$txhash){
 	$conn_string = "host=aeknow.db port=5432 dbname=postgres password=".DB_PASS." user=".DB_USER;
 	$db = pg_connect($conn_string);
 	$sql = "SELECT ctype,alias,decimal FROM contracts_token WHERE address='$contract_id'";
@@ -225,13 +231,57 @@ function CheckContracts($caller_id,$contract_id,$call_data,$block_height){
 				//print_r($data);sleep(1);
 					if($data['amount']>0){
 						ImportDB($caller_id,$contract_id,$alias,$decimal);
-						ImportDB($data['address'],$contract_id,$alias,$decimal);						
+						ImportDB_update($data['address'],$contract_id,$alias,$decimal,$txhash);						
 					}
 				}
 			}
 	}
 
+function ImportDB_update($account,$contract,$alias,$decimal,$txhash){
+	$sql="SELECT balance from token WHERE account='$account' AND contract='$contract'";
+	$conn_string = "host=aeknow.db port=5432 dbname=postgres password=".DB_PASS." user=".DB_USER;
+	$db1 = pg_connect($conn_string);
+	$result_query1 = pg_query($db1, $sql);
+	
+	$balance=getBalance($account,$contract);
 
+	if ((pg_num_rows($result_query1) == 0)) {		
+		if($balance>0){
+			$sql_insert="INSERT INTO token(account,balance,alias,decimal,contract) VALUES('$account',$balance,'$alias',$decimal,'$contract')";
+			//echo "$sql_insert\n";sleep(100);
+			$result_insert = pg_query($db1, $sql_insert);
+			if($result_insert){
+				echo $sql_insert."\n";
+				}
+		}
+		}else{
+			$balance_db=0;
+			while ($row= pg_fetch_row($result_query1)) {
+				$balance_db=$row[0];
+				}
+			
+			if(($balance>0) && ($balance!=$balance_db)){
+				$sql_update="UPDATE token SET balance=$balance WHERE account='$account' AND contract='$contract'";
+				$result_update = pg_query($db1, $sql_update);
+				if(!$result_update){
+					echo $sql_update."...failed.\n";
+					}else{echo $sql_update."...OK.\n";}					
+				}else{
+					echo "$account =>$balance ...exists.\n";
+					}
+			
+			//update recipient_id
+			$sql_update="UPDATE tx SET recipient_id='$account' WHERE txhash='$txhash'";
+			$result_update = pg_query($db1, $sql_update);
+			
+			if(!$result_update){
+				echo $sql_update."...failed.\n";
+				}else{echo "$txhash =>$account ...updated.\n";}	
+				
+				
+			//TODO update 
+			}
+	}
 
 function ImportDB($account,$contract,$alias,$decimal){
 	$sql="SELECT balance from token WHERE account='$account' AND contract='$contract'";
