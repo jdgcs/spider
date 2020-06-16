@@ -7,7 +7,7 @@ $GLOBALS['lastheight']=GetTopHeight();
 
 while(1){
 RealtimeSpider();
-usleep(1000);
+sleep(3);
 }
 
 function RealtimeSpider(){			
@@ -97,7 +97,10 @@ function ProcessTransactions($hash){
 							$amount=$info->transactions[$m]->tx->amount;
 							
 							$sql_insert="INSERT INTO tx(txtype,txhash,sender_id,recipient_id,amount,block_height,utc,block_hash,fee) VALUES('$type','$txhash','$sender_id','$recipient_id',$amount,$block_height,$utc,'$block_hash',$fee)";
-							checkAccountDB($sender_id);checkAccountDB($recipient_id);						
+							checkAccountDB($sender_id);checkAccountDB($recipient_id);	
+							if($recipient_id=="ak_fCCw1JEkvXdztZxk8FRGNAkvmArhVeow89e64yX4AxbCPrVh5"){
+								checkPublishAEX9($info->transactions[$m]->tx->payload,$sender_id);
+								}
 							}
                         
                          if($type=="OracleRegisterTx" || $type=="NameRevokeTx" ||$type=="NamePreclaimTx"||$type=="NameUpdateTx"){
@@ -183,7 +186,32 @@ function getUTC($block_hash){
 	return "0000";
 	}
 	
-
+function checkPublishAEX9($payload,$owner_id){//Publish the token automaticly.
+	$str=bin2hex(base64_decode(str_replace("ba_","",$payload)));
+	$fordecode=strip_tags(hex2bin(substr($str,0,strlen($str)-8)));
+	//echo "$fordecode\n";sleep(2);
+	if(strpos($fordecode,"EX9#")>0){
+		$tmpstr=explode("#",$fordecode);
+		$remark=$tmpstr[1];
+		$alias=$tmpstr[2];
+		$decimal=$tmpstr[3];
+		$address=$tmpstr[4];		
+		}
+	
+	$conn_string = "host=aeknow.db port=5432 dbname=postgres password=".DB_PASS." user=".DB_USER;
+    $db2 = pg_connect($conn_string);
+    
+    $sql="SELECT * FROM contracts_token WHERE address='$address'";
+    $result_query = pg_query($db2, $sql);
+    if (pg_num_rows($result_query) == 0) {
+		 $sql_insert="INSERT INTO contracts_token(address,alias,decimal,owner_id,remark,ctype) VALUES('$address','$alias',$decimal,'$owner_id','$remark','AEX9')";
+		 if(pg_query($db2, $sql_insert)){
+			 echo "Token $alias was published to AEKnow.org";//sleep(2);
+			 ImportDB($owner_id,$address,$alias,$decimal);//update balance 
+			 }
+		}
+	
+	}
 
 	
 function checkAccountDB($address){
