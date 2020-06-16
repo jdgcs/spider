@@ -241,10 +241,10 @@ function CheckContracts($caller_id,$contract_id,$call_data,$block_height){
 			if($ctype=="AEX9"){
 				$data=decode_token_transfer($call_data,$decimal);
 				//print_r($data);sleep(1);
-					if($data['amount']>0){
+					//if($data['amount']>0){
 						ImportDB($caller_id,$contract_id,$alias,$decimal);
 						ImportDB($data['address'],$contract_id,$alias,$decimal);						
-					}
+					//}
 				}
 			}
 	}
